@@ -1,21 +1,40 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Net;
-using System.Net.Mail;
+using System.Threading.Tasks;
+using Amazon;
 using Amazon.Lambda.Core;
+using Amazon.SimpleEmail;
+using Amazon.SimpleEmail.Model;
 
-[assembly:LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
+[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
 namespace AwsDotnetCsharp
 {
     public class Handler
     {
-       public Response Reminisce()
-       {
-          var memoryToSend = SelectMemory();
+        const string MyEmail = "jeremy.turinetti@gmail.com";
 
-          return new Response(memoryToSend);
+       public async Task<Response> Reminisce()
+       {
+            var memoryToSend = SelectMemory();
+
+            using (var ses = new AmazonSimpleEmailServiceClient(RegionEndpoint.USWest2))
+            {
+                // TODO: verify email identities here
+
+                await ses.SendEmailAsync(new SendEmailRequest
+                {
+                    Source = MyEmail,
+                    Destination = new Destination(new List<string> {  MyEmail }),
+                    Message = new Message
+                    {
+                        Body = new Body(new Content(memoryToSend)),
+                        Subject = new Content("Thinking of you")
+                    }
+                });
+            }
+
+            return new Response(memoryToSend);
        }
 
        private string SelectMemory()
