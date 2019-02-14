@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 
-service: aws-csharp # NOTE: update this with your service name
+service: rememberwhen-lambda # NOTE: update this with your service name
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -49,12 +49,12 @@ package:
   individually: true
 
 functions:
-  hello:
-    handler: CsharpHandlers::AwsDotnetCsharp.Handler::Hello
+  reminisce:
+    handler: CsharpHandlers::AwsDotnetCsharp.Handler::Reminisce
 
     # you can add packaging information here
     package:
-      artifact: bin/release/netcoreapp2.1/hello.zip
+      artifact: bin/release/netcoreapp2.1/rememberwhen-lambda.zip
     #  exclude:
     #    - exclude-me.js
     #    - exclude-me-dir/**
