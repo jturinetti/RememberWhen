@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 
-service: rememberwhen-lambda # NOTE: update this with your service name
+service: rememberwhen-lambda
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -42,14 +42,7 @@ provider:
 #            - "/*"
 
 # you can define service wide environment variables here
-  environment:
-    WifeEmail: ''
-    WifePhoneNumber: ''
-    HusbandEmail: ''
-    HusbandPhoneNumber: ''
-    TwilioAccountSid: ''
-    TwilioAuthToken: ''
-    TwilioPhoneNumber: ''
+#  environment:    
 
 package:
   individually: true

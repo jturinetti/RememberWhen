@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.Lambda.Core;
 using Amazon.SimpleEmail;
 using Amazon.SimpleEmail.Model;
+using Amazon.SimpleSystemsManagement;
+using Amazon.SimpleSystemsManagement.Model;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
 
@@ -14,44 +17,107 @@ namespace AwsDotnetCsharp
 {
     public class Handler
     {
-        string _wifeEmail = "";
-        string _wifePhone = "";
-        string _husbandPhone = Environment.GetEnvironmentVariable("HusbandPhoneNumber");
-        string _husbandEmail = Environment.GetEnvironmentVariable("HusbandEmail");
+        const string HusbandPhoneNumberKey = "HusbandPhoneNumber";
+        const string HusbandEmailKey = "HusbandEmail";
+        const string WifePhoneNumberKey = "WifePhoneNumber";
+        const string WifeEmailKey = "WifeEmail";
+        const string TwilioAccountSidKey = "TwilioAccountSid";
+        const string TwilioAuthTokenKey = "TwilioAuthToken";
+        const string TwilioPhoneNumberKey = "TwilioPhoneNumber";
 
-        string _twilioAccountSid = Environment.GetEnvironmentVariable("TwilioAccountSid");
-        string _twilioAuthToken = Environment.GetEnvironmentVariable("TwilioAuthToken");
-        string _twilioPhoneNumber = Environment.GetEnvironmentVariable("TwilioPhoneNumber");
+        Dictionary<string, string> parameterDictionary = new Dictionary<string, string>
+        {
+            { HusbandPhoneNumberKey, "" },
+            { HusbandEmailKey, "" },
+            { WifePhoneNumberKey, "" },
+            { WifeEmailKey, "" },
+            { TwilioAccountSidKey, "" },
+            { TwilioAuthTokenKey, "" },
+            { TwilioPhoneNumberKey, "" }
+        };
 
         public async Task<Response> Reminisce()
         {
+            // retrieve all sensitive parameters
+            using (var ssm = new AmazonSimpleSystemsManagementClient(RegionEndpoint.USWest2))
+            {
+                var keyList = parameterDictionary.Keys.ToList();
+                foreach (var key in keyList)
+                {
+                    var response = await ssm.GetParameterAsync(new GetParameterRequest
+                    {
+                        Name = key,
+                        WithDecryption = true
+                    });
+                    
+                    parameterDictionary[key] = response.Parameter.Value;
+                }
+            }
+
             var memoryToSend = SelectMemory();
+
+            var emailsToSendTo = new List<string> { parameterDictionary[HusbandEmailKey], parameterDictionary[WifeEmailKey] };
 
             using (var ses = new AmazonSimpleEmailServiceClient(RegionEndpoint.USWest2))
             {
-                // TODO: verify email identities here
+                // check to see if targeted emails are verified
+                var verificationAttributesResponse = await ses.GetIdentityVerificationAttributesAsync(new GetIdentityVerificationAttributesRequest
+                {
+                    Identities = emailsToSendTo
+                });
+
+                // ensure emails are verified, then send to all verified email addresses
+                var emailIndex = 0;
+                while (emailIndex < emailsToSendTo.Count)
+                {
+                    var email = emailsToSendTo[emailIndex];
+                    if (!verificationAttributesResponse.VerificationAttributes.ContainsKey(email)
+                        || verificationAttributesResponse.VerificationAttributes[email].VerificationStatus.Value != "Success")
+                    {
+                        // send request to verify email
+                        await ses.VerifyEmailIdentityAsync(new VerifyEmailIdentityRequest
+                        {
+                            EmailAddress = email
+                        });
+
+                        // remove from list of emails to send to this time
+                        emailsToSendTo.RemoveAt(emailIndex);
+                    }
+                    else
+                    {
+                        emailIndex++;
+                    }
+                }
 
                 // send email(s)
                 await ses.SendEmailAsync(new SendEmailRequest
                 {
-                    Source = _husbandEmail,
-                    Destination = new Destination(new List<string> { _husbandEmail }),
+                    Source = parameterDictionary[HusbandEmailKey],
+                    Destination = new Destination(emailsToSendTo),
                     Message = new Message
                     {
                         Body = new Body(new Content(memoryToSend)),
                         Subject = new Content("thinking of you")
                     }
                 });
-
-                // send text(s)
-                TwilioClient.Init(_twilioAccountSid, _twilioAuthToken);
-
-                var textMessage = MessageResource.Create(
-                    body: memoryToSend,
-                    from: new Twilio.Types.PhoneNumber(_twilioPhoneNumber),
-                    to: new Twilio.Types.PhoneNumber(_husbandPhone)
-                );
             }
+
+            // send text(s)
+            TwilioClient.Init(parameterDictionary[TwilioAccountSidKey], parameterDictionary[TwilioAuthTokenKey]);
+
+            // send to husband
+            await MessageResource.CreateAsync(
+                body: memoryToSend,
+                from: new Twilio.Types.PhoneNumber(parameterDictionary[TwilioPhoneNumberKey]),
+                to: new Twilio.Types.PhoneNumber(parameterDictionary[HusbandPhoneNumberKey])
+            );
+
+            // send to wife
+            await MessageResource.CreateAsync(
+                body: memoryToSend,
+                from: new Twilio.Types.PhoneNumber(parameterDictionary[TwilioPhoneNumberKey]),
+                to: new Twilio.Types.PhoneNumber(parameterDictionary[WifePhoneNumberKey])
+            );
 
             return new Response(memoryToSend);
         }
