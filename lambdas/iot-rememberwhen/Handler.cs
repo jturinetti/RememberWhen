@@ -25,23 +25,28 @@ namespace AwsDotnetCsharp
         const string TwilioAuthTokenKey = "TwilioAuthToken";
         const string TwilioPhoneNumberKey = "TwilioPhoneNumber";
 
-        Dictionary<string, string> parameterDictionary = new Dictionary<string, string>
+        private readonly IDictionary<string, string> _parameterDictionary;
+
+        public Handler()
         {
-            { HusbandPhoneNumberKey, "" },
-            { HusbandEmailKey, "" },
-            { WifePhoneNumberKey, "" },
-            { WifeEmailKey, "" },
-            { TwilioAccountSidKey, "" },
-            { TwilioAuthTokenKey, "" },
-            { TwilioPhoneNumberKey, "" }
-        };
+            _parameterDictionary = new Dictionary<string, string>
+            {
+                { HusbandPhoneNumberKey, "" },
+                { HusbandEmailKey, "" },
+                { WifePhoneNumberKey, "" },
+                { WifeEmailKey, "" },
+                { TwilioAccountSidKey, "" },
+                { TwilioAuthTokenKey, "" },
+                { TwilioPhoneNumberKey, "" }
+            };
+        }
 
         public async Task<Response> Reminisce()
         {
             // retrieve all sensitive parameters
             using (var ssm = new AmazonSimpleSystemsManagementClient(RegionEndpoint.USWest2))
             {
-                var keyList = parameterDictionary.Keys.ToList();
+                var keyList = _parameterDictionary.Keys.ToList();
                 foreach (var key in keyList)
                 {
                     var response = await ssm.GetParameterAsync(new GetParameterRequest
@@ -49,14 +54,14 @@ namespace AwsDotnetCsharp
                         Name = key,
                         WithDecryption = true
                     });
-                    
-                    parameterDictionary[key] = response.Parameter.Value;
+
+                    _parameterDictionary[key] = response.Parameter.Value;
                 }
             }
 
             var memoryToSend = SelectMemory();
 
-            var emailsToSendTo = new List<string> { parameterDictionary[HusbandEmailKey], parameterDictionary[WifeEmailKey] };
+            var emailsToSendTo = new List<string> { _parameterDictionary[HusbandEmailKey], _parameterDictionary[WifeEmailKey] };
 
             using (var ses = new AmazonSimpleEmailServiceClient(RegionEndpoint.USWest2))
             {
@@ -92,7 +97,7 @@ namespace AwsDotnetCsharp
                 // send email(s)
                 await ses.SendEmailAsync(new SendEmailRequest
                 {
-                    Source = parameterDictionary[HusbandEmailKey],
+                    Source = _parameterDictionary[HusbandEmailKey],
                     Destination = new Destination(emailsToSendTo),
                     Message = new Message
                     {
@@ -103,20 +108,20 @@ namespace AwsDotnetCsharp
             }
 
             // send text(s)
-            TwilioClient.Init(parameterDictionary[TwilioAccountSidKey], parameterDictionary[TwilioAuthTokenKey]);
+            TwilioClient.Init(_parameterDictionary[TwilioAccountSidKey], _parameterDictionary[TwilioAuthTokenKey]);
 
             // send to husband
             await MessageResource.CreateAsync(
                 body: memoryToSend,
-                from: new Twilio.Types.PhoneNumber(parameterDictionary[TwilioPhoneNumberKey]),
-                to: new Twilio.Types.PhoneNumber(parameterDictionary[HusbandPhoneNumberKey])
+                from: new Twilio.Types.PhoneNumber(_parameterDictionary[TwilioPhoneNumberKey]),
+                to: new Twilio.Types.PhoneNumber(_parameterDictionary[HusbandPhoneNumberKey])
             );
 
             // send to wife
             await MessageResource.CreateAsync(
                 body: memoryToSend,
-                from: new Twilio.Types.PhoneNumber(parameterDictionary[TwilioPhoneNumberKey]),
-                to: new Twilio.Types.PhoneNumber(parameterDictionary[WifePhoneNumberKey])
+                from: new Twilio.Types.PhoneNumber(_parameterDictionary[TwilioPhoneNumberKey]),
+                to: new Twilio.Types.PhoneNumber(_parameterDictionary[WifePhoneNumberKey])
             );
 
             return new Response(memoryToSend);
