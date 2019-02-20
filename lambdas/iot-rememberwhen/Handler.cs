@@ -44,6 +44,22 @@ namespace AwsDotnetCsharp
         public async Task<Response> Reminisce()
         {
             // retrieve all sensitive parameters
+            await RetrieveAmazonSSMParameters();
+
+            // randomly pick memory to send out
+            var memoryToSend = SelectMemory();
+
+            // find email addresses to send memory to
+            var emailsToSendTo = new List<string> { _parameterDictionary[HusbandEmailKey], _parameterDictionary[WifeEmailKey] };
+
+            // send memory to email addresses
+            await SendMemoryViaEmail(memoryToSend, emailsToSendTo);
+
+            return new Response(memoryToSend);
+        }
+
+        private async Task RetrieveAmazonSSMParameters()
+        {
             using (var ssm = new AmazonSimpleSystemsManagementClient(RegionEndpoint.USWest2))
             {
                 var keyList = _parameterDictionary.Keys.ToList();
@@ -58,11 +74,26 @@ namespace AwsDotnetCsharp
                     _parameterDictionary[key] = response.Parameter.Value;
                 }
             }
+        }
 
-            var memoryToSend = SelectMemory();
+        private string SelectMemory()
+        {
 
-            var emailsToSendTo = new List<string> { _parameterDictionary[HusbandEmailKey], _parameterDictionary[WifeEmailKey] };
+            var memories = new List<string>
+            {
+                "Remember that time we got married?",
+                "Remember that time we took a trip to Europe to see Italy and Greece?",
+                "Remember the night we met at Kara's party?"
+            };
 
+            var randomizer = new Random(DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Second); // this could be better
+            var randomIndex = randomizer.Next(memories.Count);
+
+            return memories[randomIndex];
+        }
+
+        private async Task SendMemoryViaEmail(string memoryToSend, List<string> emailsToSendTo)
+        {
             using (var ses = new AmazonSimpleEmailServiceClient(RegionEndpoint.USWest2))
             {
                 // check to see if targeted emails are verified
@@ -106,7 +137,10 @@ namespace AwsDotnetCsharp
                     }
                 });
             }
+        }        
 
+        private async Task SendMemoryViaText(string memoryToSend)
+        {
             // send text(s)
             TwilioClient.Init(_parameterDictionary[TwilioAccountSidKey], _parameterDictionary[TwilioAuthTokenKey]);
 
@@ -123,30 +157,12 @@ namespace AwsDotnetCsharp
                 from: new Twilio.Types.PhoneNumber(_parameterDictionary[TwilioPhoneNumberKey]),
                 to: new Twilio.Types.PhoneNumber(_parameterDictionary[WifePhoneNumberKey])
             );
-
-            return new Response(memoryToSend);
-        }
-
-        private string SelectMemory()
-        {
-
-            var memories = new List<string>
-            {
-                "Remember that time we got married?",
-                "Remember that time we took a trip to Europe to see Italy and Greece?",
-                "Remember the night we met at Kara's party?"
-            };
-
-            var randomizer = new Random(DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Second); // this could be better
-            var randomIndex = randomizer.Next(memories.Count);
-
-            return memories[randomIndex];
         }
     }
 
     public class Response
     {
-        public string Message {get; set;}
+        public string Message { get; set; }
 
         public Response(string message)
         {
