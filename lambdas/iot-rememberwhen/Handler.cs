@@ -83,7 +83,9 @@ namespace AwsDotnetCsharp
             {
                 "Remember that time we got married?",
                 "Remember that time we took a trip to Europe to see Italy and Greece?",
-                "Remember the night we met at Kara's party?"
+                "Remember the night we met at Kara's party?",
+                "Remember the chair in Hawaii?",
+                "Remember that time at our friend's wedding when I made you walk to the restroom by yourself?"
             };
 
             var randomizer = new Random(DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Second); // this could be better
