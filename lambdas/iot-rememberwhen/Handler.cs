@@ -25,23 +25,44 @@ namespace AwsDotnetCsharp
         const string TwilioAuthTokenKey = "TwilioAuthToken";
         const string TwilioPhoneNumberKey = "TwilioPhoneNumber";
 
-        Dictionary<string, string> parameterDictionary = new Dictionary<string, string>
+        private readonly IDictionary<string, string> _parameterDictionary;
+
+        public Handler()
         {
-            { HusbandPhoneNumberKey, "" },
-            { HusbandEmailKey, "" },
-            { WifePhoneNumberKey, "" },
-            { WifeEmailKey, "" },
-            { TwilioAccountSidKey, "" },
-            { TwilioAuthTokenKey, "" },
-            { TwilioPhoneNumberKey, "" }
-        };
+            _parameterDictionary = new Dictionary<string, string>
+            {
+                { HusbandPhoneNumberKey, "" },
+                { HusbandEmailKey, "" },
+                { WifePhoneNumberKey, "" },
+                { WifeEmailKey, "" },
+                { TwilioAccountSidKey, "" },
+                { TwilioAuthTokenKey, "" },
+                { TwilioPhoneNumberKey, "" }
+            };
+        }
 
         public async Task<Response> Reminisce()
         {
             // retrieve all sensitive parameters
+            await RetrieveAmazonSSMParameters();
+
+            // randomly pick memory to send out
+            var memoryToSend = SelectMemory();
+
+            // find email addresses to send memory to
+            var emailsToSendTo = new List<string> { _parameterDictionary[HusbandEmailKey], _parameterDictionary[WifeEmailKey] };
+
+            // send memory to email addresses
+            await SendMemoryViaEmail(memoryToSend, emailsToSendTo);
+
+            return new Response(memoryToSend);
+        }
+
+        private async Task RetrieveAmazonSSMParameters()
+        {
             using (var ssm = new AmazonSimpleSystemsManagementClient(RegionEndpoint.USWest2))
             {
-                var keyList = parameterDictionary.Keys.ToList();
+                var keyList = _parameterDictionary.Keys.ToList();
                 foreach (var key in keyList)
                 {
                     var response = await ssm.GetParameterAsync(new GetParameterRequest
@@ -49,15 +70,32 @@ namespace AwsDotnetCsharp
                         Name = key,
                         WithDecryption = true
                     });
-                    
-                    parameterDictionary[key] = response.Parameter.Value;
+
+                    _parameterDictionary[key] = response.Parameter.Value;
                 }
             }
+        }
 
-            var memoryToSend = SelectMemory();
+        private string SelectMemory()
+        {
 
-            var emailsToSendTo = new List<string> { parameterDictionary[HusbandEmailKey], parameterDictionary[WifeEmailKey] };
+            var memories = new List<string>
+            {
+                "Remember that time we got married?",
+                "Remember that time we took a trip to Europe to see Italy and Greece?",
+                "Remember the night we met at Kara's party?",
+                "Remember the chair in Hawaii?",
+                "Remember that time at our friend's wedding when I made you walk to the restroom by yourself?"
+            };
 
+            var randomizer = new Random(DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Second); // this could be better
+            var randomIndex = randomizer.Next(memories.Count);
+
+            return memories[randomIndex];
+        }
+
+        private async Task SendMemoryViaEmail(string memoryToSend, List<string> emailsToSendTo)
+        {
             using (var ses = new AmazonSimpleEmailServiceClient(RegionEndpoint.USWest2))
             {
                 // check to see if targeted emails are verified
@@ -92,7 +130,7 @@ namespace AwsDotnetCsharp
                 // send email(s)
                 await ses.SendEmailAsync(new SendEmailRequest
                 {
-                    Source = parameterDictionary[HusbandEmailKey],
+                    Source = _parameterDictionary[HusbandEmailKey],
                     Destination = new Destination(emailsToSendTo),
                     Message = new Message
                     {
@@ -101,47 +139,32 @@ namespace AwsDotnetCsharp
                     }
                 });
             }
+        }        
 
+        private async Task SendMemoryViaText(string memoryToSend)
+        {
             // send text(s)
-            TwilioClient.Init(parameterDictionary[TwilioAccountSidKey], parameterDictionary[TwilioAuthTokenKey]);
+            TwilioClient.Init(_parameterDictionary[TwilioAccountSidKey], _parameterDictionary[TwilioAuthTokenKey]);
 
             // send to husband
             await MessageResource.CreateAsync(
                 body: memoryToSend,
-                from: new Twilio.Types.PhoneNumber(parameterDictionary[TwilioPhoneNumberKey]),
-                to: new Twilio.Types.PhoneNumber(parameterDictionary[HusbandPhoneNumberKey])
+                from: new Twilio.Types.PhoneNumber(_parameterDictionary[TwilioPhoneNumberKey]),
+                to: new Twilio.Types.PhoneNumber(_parameterDictionary[HusbandPhoneNumberKey])
             );
 
             // send to wife
             await MessageResource.CreateAsync(
                 body: memoryToSend,
-                from: new Twilio.Types.PhoneNumber(parameterDictionary[TwilioPhoneNumberKey]),
-                to: new Twilio.Types.PhoneNumber(parameterDictionary[WifePhoneNumberKey])
+                from: new Twilio.Types.PhoneNumber(_parameterDictionary[TwilioPhoneNumberKey]),
+                to: new Twilio.Types.PhoneNumber(_parameterDictionary[WifePhoneNumberKey])
             );
-
-            return new Response(memoryToSend);
-        }
-
-        private string SelectMemory()
-        {
-
-            var memories = new List<string>
-            {
-                "Remember that time we got married?",
-                "Remember that time we took a trip to Europe to see Italy and Greece?",
-                "Remember the night we met at Kara's party?"
-            };
-
-            var randomizer = new Random(DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Second); // this could be better
-            var randomIndex = randomizer.Next(memories.Count);
-
-            return memories[randomIndex];
         }
     }
 
     public class Response
     {
-        public string Message {get; set;}
+        public string Message { get; set; }
 
         public Response(string message)
         {
