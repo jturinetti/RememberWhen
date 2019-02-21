@@ -22,7 +22,7 @@ provider:
   runtime: dotnetcore2.1
 
 # you can overwrite defaults here
-#  stage: dev
+  stage: dev
   region: us-west-2
 
 # you can add statements to the Lambda function's IAM Role here

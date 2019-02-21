@@ -12,7 +12,6 @@ using Twilio;
 using Twilio.Rest.Api.V2010.Account;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
-
 namespace AwsDotnetCsharp
 {
     public class Handler
@@ -27,6 +26,8 @@ namespace AwsDotnetCsharp
 
         private readonly IDictionary<string, string> _parameterDictionary;
 
+        private readonly string _environment;
+
         public Handler()
         {
             _parameterDictionary = new Dictionary<string, string>
@@ -39,7 +40,13 @@ namespace AwsDotnetCsharp
                 { TwilioAuthTokenKey, "" },
                 { TwilioPhoneNumberKey, "" }
             };
+
+            _environment = Environment.GetEnvironmentVariable("STAGE");
         }
+
+        bool IsProduction => string.Compare(_environment, "prod", true) == 0;
+
+        bool IsDev => string.Compare(_environment, "dev", true) == 0;
 
         public async Task<Response> Reminisce()
         {
@@ -50,13 +57,20 @@ namespace AwsDotnetCsharp
             var memoryToSend = SelectMemory();
 
             // find email addresses to send memory to
-            var emailsToSendTo = new List<string> { _parameterDictionary[HusbandEmailKey], _parameterDictionary[WifeEmailKey] };
+            var emailsToSendTo = new List<string> { _parameterDictionary[HusbandEmailKey] };
+            if (IsProduction)
+            {
+                emailsToSendTo.Add(_parameterDictionary[WifeEmailKey]);
+            }
 
             // send memory to email addresses
             await SendMemoryViaEmail(memoryToSend, emailsToSendTo);
 
-            // send memory to phones via text
-            await SendMemoryViaText(memoryToSend);
+            if (IsProduction)
+            {
+                // send memory to phones via text
+                await SendMemoryViaText(memoryToSend);
+            }
 
             return new Response(memoryToSend);
         }
