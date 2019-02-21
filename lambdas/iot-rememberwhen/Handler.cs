@@ -55,6 +55,9 @@ namespace AwsDotnetCsharp
             // send memory to email addresses
             await SendMemoryViaEmail(memoryToSend, emailsToSendTo);
 
+            // send memory to phones via text
+            await SendMemoryViaText(memoryToSend);
+
             return new Response(memoryToSend);
         }
 
