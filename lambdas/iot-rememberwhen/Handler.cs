@@ -57,13 +57,20 @@ namespace AwsDotnetCsharp
             var memoryToSend = SelectMemory();
 
             // find email addresses to send memory to
-            var emailsToSendTo = new List<string> { _parameterDictionary[HusbandEmailKey], _parameterDictionary[WifeEmailKey] };
+            var emailsToSendTo = new List<string> { _parameterDictionary[HusbandEmailKey] };
+            if (IsProduction)
+            {
+                emailsToSendTo.Add(_parameterDictionary[WifeEmailKey]);
+            }
 
             // send memory to email addresses
             await SendMemoryViaEmail(memoryToSend, emailsToSendTo);
 
-            // send memory to phones via text
-            await SendMemoryViaText(memoryToSend);
+            if (IsProduction)
+            {
+                // send memory to phones via text
+                await SendMemoryViaText(memoryToSend);
+            }
 
             return new Response(memoryToSend);
         }
