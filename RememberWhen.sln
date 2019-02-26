@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RememberWhen.Lambda", "lamb
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lambdas", "lambdas", "{02E61730-C4E8-4176-9F2A-24752D6393F8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RememberWhen.Lambda.Tests", "lambdas\iot-rememberwhen-tests\RememberWhen.Lambda.Tests.csproj", "{F6D53C70-8A46-4A23-B5B2-06E57DB8E2ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RememberWhen.Lambda.Tests", "lambdas\iot-rememberwhen-tests\RememberWhen.Lambda.Tests.csproj", "{F6D53C70-8A46-4A23-B5B2-06E57DB8E2ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,10 +27,11 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6F05B97A-BDA6-4F7F-BA5F-10DAD61A5465} = {02E61730-C4E8-4176-9F2A-24752D6393F8}
+		{F6D53C70-8A46-4A23-B5B2-06E57DB8E2ED} = {02E61730-C4E8-4176-9F2A-24752D6393F8}
+	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E6EF34A9-E613-440A-9380-C070203F2095}
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{F6D53C70-8A46-4A23-B5B2-06E57DB8E2ED} = {02E61730-C4E8-4176-9F2A-24752D6393F8}
 	EndGlobalSection
 EndGlobal
