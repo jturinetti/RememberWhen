@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\iot-rememberwhen\RememberWhen.Lambda.csproj" />
+    <ProjectReference Include="..\RememberWhen.Lambda\RememberWhen.Lambda.csproj" />
   </ItemGroup>
 
 </Project>

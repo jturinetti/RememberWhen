@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.421
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RememberWhen.Lambda", "lambdas\iot-rememberwhen\RememberWhen.Lambda.csproj", "{6F05B97A-BDA6-4F7F-BA5F-10DAD61A5465}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RememberWhen.Lambda", "lambdas\RememberWhen.Lambda\RememberWhen.Lambda.csproj", "{6F05B97A-BDA6-4F7F-BA5F-10DAD61A5465}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lambdas", "lambdas", "{02E61730-C4E8-4176-9F2A-24752D6393F8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RememberWhen.Lambda.Tests", "lambdas\iot-rememberwhen-tests\RememberWhen.Lambda.Tests.csproj", "{F6D53C70-8A46-4A23-B5B2-06E57DB8E2ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RememberWhen.Lambda.Tests", "lambdas\RememberWhen.Lambda.Tests\RememberWhen.Lambda.Tests.csproj", "{F6D53C70-8A46-4A23-B5B2-06E57DB8E2ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
