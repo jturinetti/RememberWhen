@@ -49,7 +49,7 @@ package:
 
 functions:
   reminisce:
-    handler: CsharpHandlers::RememberWhen.Lambda.Function::Reminisce
+    handler: CsharpHandlers::RememberWhen.Lambda.Handler::Reminisce
 
     # you can add packaging information here
     package:

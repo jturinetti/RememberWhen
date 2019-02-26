@@ -14,7 +14,7 @@ using Twilio.Rest.Api.V2010.Account;
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 namespace RememberWhen.Lambda
 {
-    public class Function
+    public class Handler
     {
         const string HusbandPhoneNumberKey = "HusbandPhoneNumber";
         const string HusbandEmailKey = "HusbandEmail";
@@ -28,7 +28,7 @@ namespace RememberWhen.Lambda
 
         private readonly string _environment;
 
-        public Function()
+        public Handler()
         {
             _parameterDictionary = new Dictionary<string, string>
             {
