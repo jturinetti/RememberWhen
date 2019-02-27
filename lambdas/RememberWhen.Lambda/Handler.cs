@@ -9,6 +9,7 @@ using Amazon.SimpleEmail.Model;
 using Amazon.SimpleSystemsManagement;
 using Amazon.SimpleSystemsManagement.Model;
 using Microsoft.Extensions.DependencyInjection;
+using RememberWhen.Lambda.Models;
 using RememberWhen.Lambda.Services;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
@@ -30,6 +31,8 @@ namespace RememberWhen.Lambda
 
         private readonly string _environment;
 
+        private readonly IApplicationService _application;
+
         public Handler()
         {
             _parameterDictionary = new Dictionary<string, string>
@@ -45,13 +48,14 @@ namespace RememberWhen.Lambda
 
             _environment = Environment.GetEnvironmentVariable("STAGE");
 
-            InitializeApplication();
+            _application = InitializeApplication();
         }
 
         private IApplicationService InitializeApplication()
         {
             var services = new ServiceCollection();
 
+            services.AddTransient<IMemoryService, StaticMemoryService>();
             services.AddTransient<IEmailService, SESEmailService>();
             services.AddTransient<IParameterManagementService, SSMParameterManagementService>();
             services.AddTransient<ITextMessageService, TwilioTextMessageService>();
@@ -66,7 +70,7 @@ namespace RememberWhen.Lambda
 
         bool IsDev => string.Compare(_environment, "dev", true) == 0;
 
-        public async Task<Response> Reminisce()
+        public async Task<RememberWhenResponseModel> Reminisce()
         {
             // retrieve all sensitive parameters
             await RetrieveAmazonSSMParameters();
@@ -90,7 +94,7 @@ namespace RememberWhen.Lambda
                 await SendMemoryViaText(memoryToSend);
             }
 
-            return new Response(memoryToSend);
+            return new RememberWhenResponseModel(memoryToSend);
         }
 
         private async Task RetrieveAmazonSSMParameters()
@@ -194,16 +198,6 @@ namespace RememberWhen.Lambda
                 from: new Twilio.Types.PhoneNumber(_parameterDictionary[TwilioPhoneNumberKey]),
                 to: new Twilio.Types.PhoneNumber(_parameterDictionary[WifePhoneNumberKey])
             );
-        }
-    }
-
-    public class Response
-    {
-        public string Message { get; set; }
-
-        public Response(string message)
-        {
-            Message = message;
         }
     }
 }

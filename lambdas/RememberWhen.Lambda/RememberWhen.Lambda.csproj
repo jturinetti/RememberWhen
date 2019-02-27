@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RememberWhen.Lambda.Models\RememberWhen.Lambda.Models.csproj" />
     <ProjectReference Include="..\RememberWhen.Lambda.Services\RememberWhen.Lambda.Services.csproj" />
   </ItemGroup>
 
