@@ -19,37 +19,13 @@ namespace RememberWhen.Lambda
 {
     public class Handler
     {
-        const string HusbandPhoneNumberKey = "HusbandPhoneNumber";
-        const string HusbandEmailKey = "HusbandEmail";
-        const string WifePhoneNumberKey = "WifePhoneNumber";
-        const string WifeEmailKey = "WifeEmail";
-        const string TwilioAccountSidKey = "TwilioAccountSid";
-        const string TwilioAuthTokenKey = "TwilioAuthToken";
-        const string TwilioPhoneNumberKey = "TwilioPhoneNumber";
+        private IDictionary<string, string> _parameterDictionary;
+        private bool _isProduction;
 
-        private readonly IDictionary<string, string> _parameterDictionary;
-        private readonly bool _isProduction;
-
-        private readonly IApplicationService _application;
+        private IApplicationService _application;
 
         public Handler()
         {
-            _parameterDictionary = new Dictionary<string, string>
-            {
-                { HusbandPhoneNumberKey, "" },
-                { HusbandEmailKey, "" },
-                { WifePhoneNumberKey, "" },
-                { WifeEmailKey, "" },
-                { TwilioAccountSidKey, "" },
-                { TwilioAuthTokenKey, "" },
-                { TwilioPhoneNumberKey, "" }
-            };
-
-            var serviceProvider = InitializeApplication();
-            _application = serviceProvider.GetService<IApplicationService>();
-            var environmentService = serviceProvider.GetService<IEnvironmentManagementService>();
-
-            _isProduction = environmentService.EnvironmentType == Environments.Production;
         }
 
         private ServiceProvider InitializeApplication()
@@ -70,17 +46,25 @@ namespace RememberWhen.Lambda
 
         public async Task<RememberWhenResponseModel> Reminisce()
         {
+            // TODO: move what we can from here to constructor?
+            var serviceProvider = InitializeApplication();
+            _application = serviceProvider.GetService<IApplicationService>();
+
             // retrieve all sensitive parameters
-            await RetrieveAmazonSSMParameters();
+            var parameterService = serviceProvider.GetService<IParameterManagementService>();
+            _parameterDictionary = await parameterService.RetrieveParameters(Constants.ParameterKeys);
+
+            var environmentService = serviceProvider.GetService<IEnvironmentManagementService>();
+            _isProduction = environmentService.EnvironmentType == Environments.Production;
 
             // randomly pick memory to send out
             var memoryToSend = SelectMemory();
 
             // find email addresses to send memory to
-            var emailsToSendTo = new List<string> { _parameterDictionary[HusbandEmailKey] };
+            var emailsToSendTo = new List<string> { _parameterDictionary[Constants.HusbandEmailKey] };
             if (_isProduction)
             {
-                emailsToSendTo.Add(_parameterDictionary[WifeEmailKey]);
+                emailsToSendTo.Add(_parameterDictionary[Constants.WifeEmailKey]);
             }
 
             // send memory to email addresses
@@ -95,27 +79,8 @@ namespace RememberWhen.Lambda
             return new RememberWhenResponseModel(memoryToSend);
         }
 
-        private async Task RetrieveAmazonSSMParameters()
-        {
-            using (var ssm = new AmazonSimpleSystemsManagementClient(RegionEndpoint.USWest2))
-            {
-                var keyList = _parameterDictionary.Keys.ToList();
-                foreach (var key in keyList)
-                {
-                    var response = await ssm.GetParameterAsync(new GetParameterRequest
-                    {
-                        Name = key,
-                        WithDecryption = true
-                    });
-
-                    _parameterDictionary[key] = response.Parameter.Value;
-                }
-            }
-        }
-
         private string SelectMemory()
         {
-
             var memories = new List<string>
             {
                 "Remember that time we got married?",
@@ -167,7 +132,7 @@ namespace RememberWhen.Lambda
                 // send email(s)
                 await ses.SendEmailAsync(new SendEmailRequest
                 {
-                    Source = _parameterDictionary[HusbandEmailKey],
+                    Source = _parameterDictionary[Constants.HusbandEmailKey],
                     Destination = new Destination(emailsToSendTo),
                     Message = new Message
                     {
@@ -181,20 +146,20 @@ namespace RememberWhen.Lambda
         private async Task SendMemoryViaText(string memoryToSend)
         {
             // send text(s)
-            TwilioClient.Init(_parameterDictionary[TwilioAccountSidKey], _parameterDictionary[TwilioAuthTokenKey]);
+            TwilioClient.Init(_parameterDictionary[Constants.TwilioAccountSidKey], _parameterDictionary[Constants.TwilioAuthTokenKey]);
 
             // send to husband
             await MessageResource.CreateAsync(
                 body: memoryToSend,
-                from: new Twilio.Types.PhoneNumber(_parameterDictionary[TwilioPhoneNumberKey]),
-                to: new Twilio.Types.PhoneNumber(_parameterDictionary[HusbandPhoneNumberKey])
+                from: new Twilio.Types.PhoneNumber(_parameterDictionary[Constants.TwilioPhoneNumberKey]),
+                to: new Twilio.Types.PhoneNumber(_parameterDictionary[Constants.HusbandPhoneNumberKey])
             );
 
             // send to wife
             await MessageResource.CreateAsync(
                 body: memoryToSend,
-                from: new Twilio.Types.PhoneNumber(_parameterDictionary[TwilioPhoneNumberKey]),
-                to: new Twilio.Types.PhoneNumber(_parameterDictionary[WifePhoneNumberKey])
+                from: new Twilio.Types.PhoneNumber(_parameterDictionary[Constants.TwilioPhoneNumberKey]),
+                to: new Twilio.Types.PhoneNumber(_parameterDictionary[Constants.WifePhoneNumberKey])
             );
         }
     }

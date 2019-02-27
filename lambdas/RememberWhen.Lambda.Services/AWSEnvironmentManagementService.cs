@@ -1,4 +1,5 @@
 ﻿using System;
+using Amazon;
 
 namespace RememberWhen.Lambda.Services
 {
@@ -13,6 +14,8 @@ namespace RememberWhen.Lambda.Services
         string RetrieveEnvironmentName();
 
         Environments EnvironmentType { get; }
+
+        RegionEndpoint AWSRegion { get; }
     }
 
     public class AWSEnvironmentManagementService : IEnvironmentManagementService
@@ -44,5 +47,7 @@ namespace RememberWhen.Lambda.Services
         }
 
         public Environments EnvironmentType { get; }
+
+        public RegionEndpoint AWSRegion => RegionEndpoint.USWest2;
     }
 }
