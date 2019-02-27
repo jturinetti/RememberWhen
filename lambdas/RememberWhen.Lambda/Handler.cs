@@ -8,6 +8,8 @@ using Amazon.SimpleEmail;
 using Amazon.SimpleEmail.Model;
 using Amazon.SimpleSystemsManagement;
 using Amazon.SimpleSystemsManagement.Model;
+using Microsoft.Extensions.DependencyInjection;
+using RememberWhen.Lambda.Services;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
 
@@ -42,6 +44,22 @@ namespace RememberWhen.Lambda
             };
 
             _environment = Environment.GetEnvironmentVariable("STAGE");
+
+            InitializeApplication();
+        }
+
+        private IApplicationService InitializeApplication()
+        {
+            var services = new ServiceCollection();
+
+            services.AddTransient<IEmailService, SESEmailService>();
+            services.AddTransient<IParameterManagementService, SSMParameterManagementService>();
+            services.AddTransient<ITextMessageService, TwilioTextMessageService>();
+            services.AddTransient<IApplicationService, RememberWhenApplicationService>();
+
+            var serviceProvider = services.BuildServiceProvider();
+
+            return serviceProvider.GetService<IApplicationService>();
         }
 
         bool IsProduction => string.Compare(_environment, "prod", true) == 0;

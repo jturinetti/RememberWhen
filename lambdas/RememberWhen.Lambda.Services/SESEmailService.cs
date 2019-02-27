@@ -9,7 +9,7 @@ namespace RememberWhen.Lambda.Services
 
     }
 
-    public class EmailService : IEmailService
+    public class SESEmailService : IEmailService
     {
 
     }

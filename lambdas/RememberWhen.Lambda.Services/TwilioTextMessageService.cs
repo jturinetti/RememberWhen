@@ -9,7 +9,7 @@ namespace RememberWhen.Lambda.Services
 
     }
 
-    public class TextMessageService : ITextMessageService
+    public class TwilioTextMessageService : ITextMessageService
     {
 
     }

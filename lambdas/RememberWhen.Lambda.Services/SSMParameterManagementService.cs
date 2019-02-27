@@ -9,7 +9,7 @@ namespace RememberWhen.Lambda.Services
 
     }
 
-    public class ParameterManagementService : IParameterManagementService
+    public class SSMParameterManagementService : IParameterManagementService
     {
 
     }
