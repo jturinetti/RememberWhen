@@ -19,4 +19,8 @@
     <DotNetCliToolReference Include="Amazon.Lambda.Tools" Version="2.2.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\RememberWhen.Lambda.Services\RememberWhen.Lambda.Services.csproj" />
+  </ItemGroup>
+
 </Project>
