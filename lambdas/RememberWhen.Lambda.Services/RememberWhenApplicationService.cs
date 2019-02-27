@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using RememberWhen.Lambda.Models;
 
 namespace RememberWhen.Lambda.Services
 {
     public interface IApplicationService
     {
-
+        RememberWhenResponseModel Run();
     }
 
     public class RememberWhenApplicationService : IApplicationService
@@ -26,6 +27,11 @@ namespace RememberWhen.Lambda.Services
             _parameterManagementService = parameterManagementService;
             _emailService = emailService;
             _textMessageService = textMessageService;
+        }
+
+        public RememberWhenResponseModel Run()
+        {
+            throw new NotImplementedException();
         }
     }
 }
