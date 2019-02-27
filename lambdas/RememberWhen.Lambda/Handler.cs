@@ -28,8 +28,7 @@ namespace RememberWhen.Lambda
         const string TwilioPhoneNumberKey = "TwilioPhoneNumber";
 
         private readonly IDictionary<string, string> _parameterDictionary;
-
-        private readonly string _environment;
+        private readonly bool _isProduction;
 
         private readonly IApplicationService _application;
 
@@ -46,12 +45,14 @@ namespace RememberWhen.Lambda
                 { TwilioPhoneNumberKey, "" }
             };
 
-            _environment = Environment.GetEnvironmentVariable("STAGE");
+            var serviceProvider = InitializeApplication();
+            _application = serviceProvider.GetService<IApplicationService>();
+            var environmentService = serviceProvider.GetService<IEnvironmentManagementService>();
 
-            _application = InitializeApplication();
+            _isProduction = environmentService.EnvironmentType == Environments.Production;
         }
 
-        private IApplicationService InitializeApplication()
+        private ServiceProvider InitializeApplication()
         {
             var services = new ServiceCollection();
 
@@ -59,16 +60,13 @@ namespace RememberWhen.Lambda
             services.AddTransient<IEmailService, SESEmailService>();
             services.AddTransient<IParameterManagementService, SSMParameterManagementService>();
             services.AddTransient<ITextMessageService, TwilioTextMessageService>();
+            services.AddTransient<IEnvironmentManagementService, AWSEnvironmentManagementService>();
             services.AddTransient<IApplicationService, RememberWhenApplicationService>();
 
             var serviceProvider = services.BuildServiceProvider();
 
-            return serviceProvider.GetService<IApplicationService>();
+            return serviceProvider;
         }
-
-        bool IsProduction => string.Compare(_environment, "prod", true) == 0;
-
-        bool IsDev => string.Compare(_environment, "dev", true) == 0;
 
         public async Task<RememberWhenResponseModel> Reminisce()
         {
@@ -80,7 +78,7 @@ namespace RememberWhen.Lambda
 
             // find email addresses to send memory to
             var emailsToSendTo = new List<string> { _parameterDictionary[HusbandEmailKey] };
-            if (IsProduction)
+            if (_isProduction)
             {
                 emailsToSendTo.Add(_parameterDictionary[WifeEmailKey]);
             }
@@ -88,7 +86,7 @@ namespace RememberWhen.Lambda
             // send memory to email addresses
             await SendMemoryViaEmail(memoryToSend, emailsToSendTo);
 
-            if (IsProduction)
+            if (_isProduction)
             {
                 // send memory to phones via text
                 await SendMemoryViaText(memoryToSend);
