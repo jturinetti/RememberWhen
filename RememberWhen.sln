@@ -3,7 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.421
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RememberWhen.Lambda", "lambdas\iot-rememberwhen\RememberWhen.Lambda.csproj", "{6F05B97A-BDA6-4F7F-BA5F-10DAD61A5465}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RememberWhen.Lambda", "lambdas\RememberWhen.Lambda\RememberWhen.Lambda.csproj", "{6F05B97A-BDA6-4F7F-BA5F-10DAD61A5465}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lambdas", "lambdas", "{02E61730-C4E8-4176-9F2A-24752D6393F8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RememberWhen.Lambda.Tests", "lambdas\RememberWhen.Lambda.Tests\RememberWhen.Lambda.Tests.csproj", "{F6D53C70-8A46-4A23-B5B2-06E57DB8E2ED}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RememberWhen.Lambda.Services", "lambdas\RememberWhen.Lambda.Services\RememberWhen.Lambda.Services.csproj", "{8D0B7DD9-75AB-4C80-9385-2236E7381509}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RememberWhen.Lambda.Models", "lambdas\RememberWhen.Lambda.Models\RememberWhen.Lambda.Models.csproj", "{1B44BDD0-BABC-47A1-B421-FFB06665FAD6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,9 +23,27 @@ Global
 		{6F05B97A-BDA6-4F7F-BA5F-10DAD61A5465}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F05B97A-BDA6-4F7F-BA5F-10DAD61A5465}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F05B97A-BDA6-4F7F-BA5F-10DAD61A5465}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6D53C70-8A46-4A23-B5B2-06E57DB8E2ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6D53C70-8A46-4A23-B5B2-06E57DB8E2ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6D53C70-8A46-4A23-B5B2-06E57DB8E2ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6D53C70-8A46-4A23-B5B2-06E57DB8E2ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D0B7DD9-75AB-4C80-9385-2236E7381509}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D0B7DD9-75AB-4C80-9385-2236E7381509}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D0B7DD9-75AB-4C80-9385-2236E7381509}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D0B7DD9-75AB-4C80-9385-2236E7381509}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B44BDD0-BABC-47A1-B421-FFB06665FAD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B44BDD0-BABC-47A1-B421-FFB06665FAD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B44BDD0-BABC-47A1-B421-FFB06665FAD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B44BDD0-BABC-47A1-B421-FFB06665FAD6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6F05B97A-BDA6-4F7F-BA5F-10DAD61A5465} = {02E61730-C4E8-4176-9F2A-24752D6393F8}
+		{F6D53C70-8A46-4A23-B5B2-06E57DB8E2ED} = {02E61730-C4E8-4176-9F2A-24752D6393F8}
+		{8D0B7DD9-75AB-4C80-9385-2236E7381509} = {02E61730-C4E8-4176-9F2A-24752D6393F8}
+		{1B44BDD0-BABC-47A1-B421-FFB06665FAD6} = {02E61730-C4E8-4176-9F2A-24752D6393F8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E6EF34A9-E613-440A-9380-C070203F2095}
