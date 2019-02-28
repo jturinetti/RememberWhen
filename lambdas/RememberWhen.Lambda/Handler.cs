@@ -70,7 +70,8 @@ namespace RememberWhen.Lambda
             }
 
             // send memory to email addresses
-            await SendMemoryViaEmail(memoryToSend, emailsToSendTo);
+            var emailService = serviceProvider.GetService<IEmailService>();
+            await emailService.SendMemory(memoryToSend, _parameterDictionary[Constants.HusbandEmailKey], emailsToSendTo);
 
             if (_isProduction)
             {
@@ -80,53 +81,6 @@ namespace RememberWhen.Lambda
 
             return new RememberWhenResponseModel(memoryToSend);
         }
-
-        private async Task SendMemoryViaEmail(string memoryToSend, List<string> emailsToSendTo)
-        {
-            using (var ses = new AmazonSimpleEmailServiceClient(RegionEndpoint.USWest2))
-            {
-                // check to see if targeted emails are verified
-                var verificationAttributesResponse = await ses.GetIdentityVerificationAttributesAsync(new GetIdentityVerificationAttributesRequest
-                {
-                    Identities = emailsToSendTo
-                });
-
-                // ensure emails are verified, then send to all verified email addresses
-                var emailIndex = 0;
-                while (emailIndex < emailsToSendTo.Count)
-                {
-                    var email = emailsToSendTo[emailIndex];
-                    if (!verificationAttributesResponse.VerificationAttributes.ContainsKey(email)
-                        || verificationAttributesResponse.VerificationAttributes[email].VerificationStatus.Value != "Success")
-                    {
-                        // send request to verify email
-                        await ses.VerifyEmailIdentityAsync(new VerifyEmailIdentityRequest
-                        {
-                            EmailAddress = email
-                        });
-
-                        // remove from list of emails to send to this time
-                        emailsToSendTo.RemoveAt(emailIndex);
-                    }
-                    else
-                    {
-                        emailIndex++;
-                    }
-                }
-
-                // send email(s)
-                await ses.SendEmailAsync(new SendEmailRequest
-                {
-                    Source = _parameterDictionary[Constants.HusbandEmailKey],
-                    Destination = new Destination(emailsToSendTo),
-                    Message = new Message
-                    {
-                        Body = new Body(new Content(memoryToSend)),
-                        Subject = new Content("thinking of you")
-                    }
-                });
-            }
-        }        
 
         private async Task SendMemoryViaText(string memoryToSend)
         {
