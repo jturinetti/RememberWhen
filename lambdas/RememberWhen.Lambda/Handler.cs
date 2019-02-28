@@ -54,11 +54,13 @@ namespace RememberWhen.Lambda
             var parameterService = serviceProvider.GetService<IParameterManagementService>();
             _parameterDictionary = await parameterService.RetrieveParameters(Constants.ParameterKeys);
 
+            // determine environment
             var environmentService = serviceProvider.GetService<IEnvironmentManagementService>();
             _isProduction = environmentService.EnvironmentType == Environments.Production;
 
-            // randomly pick memory to send out
-            var memoryToSend = SelectMemory();
+            // select memory
+            var memoryService = serviceProvider.GetService<IMemoryService>();
+            var memoryToSend = memoryService.RetrieveRandomMemory();
 
             // find email addresses to send memory to
             var emailsToSendTo = new List<string> { _parameterDictionary[Constants.HusbandEmailKey] };
@@ -77,23 +79,6 @@ namespace RememberWhen.Lambda
             }
 
             return new RememberWhenResponseModel(memoryToSend);
-        }
-
-        private string SelectMemory()
-        {
-            var memories = new List<string>
-            {
-                "Remember that time we got married?",
-                "Remember that time we took a trip to Europe to see Italy and Greece?",
-                "Remember the night we met at Kara's party?",
-                "Remember the chair in Hawaii?",
-                "Remember that time at our friend's wedding when I made you walk to the restroom by yourself?"
-            };
-
-            var randomizer = new Random(DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Second); // this could be better
-            var randomIndex = randomizer.Next(memories.Count);
-
-            return memories[randomIndex];
         }
 
         private async Task SendMemoryViaEmail(string memoryToSend, List<string> emailsToSendTo)
