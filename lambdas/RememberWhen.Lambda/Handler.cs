@@ -76,30 +76,15 @@ namespace RememberWhen.Lambda
             if (_isProduction)
             {
                 // send memory to phones via text
-                await SendMemoryViaText(memoryToSend);
+                var textMessageService = serviceProvider.GetService<ITextMessageService>();
+                await textMessageService.SendMemory(
+                    memoryToSend,
+                    _parameterDictionary[Constants.TwilioPhoneNumberKey],
+                    new string[2] { _parameterDictionary[Constants.HusbandPhoneNumberKey], _parameterDictionary[Constants.WifePhoneNumberKey] }
+                );
             }
 
             return new RememberWhenResponseModel(memoryToSend);
-        }
-
-        private async Task SendMemoryViaText(string memoryToSend)
-        {
-            // send text(s)
-            TwilioClient.Init(_parameterDictionary[Constants.TwilioAccountSidKey], _parameterDictionary[Constants.TwilioAuthTokenKey]);
-
-            // send to husband
-            await MessageResource.CreateAsync(
-                body: memoryToSend,
-                from: new Twilio.Types.PhoneNumber(_parameterDictionary[Constants.TwilioPhoneNumberKey]),
-                to: new Twilio.Types.PhoneNumber(_parameterDictionary[Constants.HusbandPhoneNumberKey])
-            );
-
-            // send to wife
-            await MessageResource.CreateAsync(
-                body: memoryToSend,
-                from: new Twilio.Types.PhoneNumber(_parameterDictionary[Constants.TwilioPhoneNumberKey]),
-                to: new Twilio.Types.PhoneNumber(_parameterDictionary[Constants.WifePhoneNumberKey])
-            );
         }
     }
 }
