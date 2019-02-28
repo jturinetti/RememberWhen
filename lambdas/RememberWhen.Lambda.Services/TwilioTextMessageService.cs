@@ -36,16 +36,23 @@ namespace RememberWhen.Lambda.Services
 
             // initialize client
             TwilioClient.Init(parameterDictionary[Constants.TwilioAccountSidKey], parameterDictionary[Constants.TwilioAuthTokenKey]);
-            
+
+            var textTaskList = new List<Task<MessageResource>>();
+
             // send text(s)
             foreach (var phoneNumber in phoneNumbers)
             {
-                await MessageResource.CreateAsync(
+                var textTask = MessageResource.CreateAsync(
                     body: memoryToSend,
                     from: new Twilio.Types.PhoneNumber(parameterDictionary[Constants.TwilioPhoneNumberKey]),
                     to: new Twilio.Types.PhoneNumber(phoneNumber)
                 );
+
+                textTaskList.Add(textTask);
             }
+
+            // wait until done sending to all numbers
+            await Task.WhenAll(textTaskList);
         }
     }
 }
