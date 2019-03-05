@@ -28,8 +28,8 @@ namespace RememberWhen.Lambda
             services.AddTransient<IEmailService, SESEmailService>();
             services.AddTransient<IParameterManagementService, SSMParameterManagementService>();
             services.AddTransient<ITextMessageService, TwilioTextMessageService>();
-            services.AddTransient<IEnvironmentManagementService, AWSEnvironmentManagementService>();
             services.AddTransient<IApplicationService, RememberWhenApplicationService>();
+            services.AddSingleton<IEnvironmentManagementService, AWSEnvironmentManagementService>();
 
             // Amazon service registrations
             services.AddTransient<IAmazonSimpleEmailService, AmazonSimpleEmailServiceClient>(container =>
