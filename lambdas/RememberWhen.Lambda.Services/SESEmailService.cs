@@ -12,58 +12,55 @@ namespace RememberWhen.Lambda.Services
 
     public class SESEmailService : IEmailService
     {
-        private readonly IEnvironmentManagementService _environmentManagementService;
+        private readonly IAmazonSimpleEmailService _ses;
 
-        public SESEmailService(IEnvironmentManagementService environmentManagementService)
+        public SESEmailService(IAmazonSimpleEmailService ses)
         {
-            _environmentManagementService = environmentManagementService;
+            _ses = ses;
         }
 
         public async Task SendMemory(string memoryToSend, string fromEmailAddress, List<string> targetEmailAddresses)
-        {
-            using (var ses = new AmazonSimpleEmailServiceClient(_environmentManagementService.AWSRegion))
+        {            
+            // check to see if targeted emails are verified
+            var verificationAttributesResponse = await _ses.GetIdentityVerificationAttributesAsync(new GetIdentityVerificationAttributesRequest
             {
-                // check to see if targeted emails are verified
-                var verificationAttributesResponse = await ses.GetIdentityVerificationAttributesAsync(new GetIdentityVerificationAttributesRequest
-                {
-                    Identities = targetEmailAddresses
-                });
+                Identities = targetEmailAddresses
+            });
 
-                // ensure emails are verified, then send to all verified email addresses
-                var emailIndex = 0;
-                while (emailIndex < targetEmailAddresses.Count)
+            // ensure emails are verified, then send to all verified email addresses
+            var emailIndex = 0;
+            while (emailIndex < targetEmailAddresses.Count)
+            {
+                var email = targetEmailAddresses[emailIndex];
+                if (!verificationAttributesResponse.VerificationAttributes.ContainsKey(email)
+                    || verificationAttributesResponse.VerificationAttributes[email].VerificationStatus.Value != "Success")
                 {
-                    var email = targetEmailAddresses[emailIndex];
-                    if (!verificationAttributesResponse.VerificationAttributes.ContainsKey(email)
-                        || verificationAttributesResponse.VerificationAttributes[email].VerificationStatus.Value != "Success")
+                    // send request to verify email
+                    await _ses.VerifyEmailIdentityAsync(new VerifyEmailIdentityRequest
                     {
-                        // send request to verify email
-                        await ses.VerifyEmailIdentityAsync(new VerifyEmailIdentityRequest
-                        {
-                            EmailAddress = email
-                        });
+                        EmailAddress = email
+                    });
 
-                        // remove from list of emails to send to this time
-                        targetEmailAddresses.RemoveAt(emailIndex);
-                    }
-                    else
-                    {
-                        emailIndex++;
-                    }
+                    // remove from list of emails to send to this time
+                    targetEmailAddresses.RemoveAt(emailIndex);
                 }
-
-                // send email(s)
-                await ses.SendEmailAsync(new SendEmailRequest
+                else
                 {
-                    Source = fromEmailAddress,
-                    Destination = new Destination(targetEmailAddresses),
-                    Message = new Message
-                    {
-                        Body = new Body(new Content(memoryToSend)),
-                        Subject = new Content("thinking of you")
-                    }
-                });
+                    emailIndex++;
+                }
             }
+
+            // send email(s)
+            await _ses.SendEmailAsync(new SendEmailRequest
+            {
+                Source = fromEmailAddress,
+                Destination = new Destination(targetEmailAddresses),
+                Message = new Message
+                {
+                    Body = new Body(new Content(memoryToSend)),
+                    Subject = new Content("thinking of you")
+                }
+            });
         }
     }
 }
