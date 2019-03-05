@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.SimpleEmail;
+using Amazon.SimpleSystemsManagement;
 using Microsoft.Extensions.DependencyInjection;
 using RememberWhen.Lambda.Models;
 using RememberWhen.Lambda.Services;
@@ -35,6 +36,11 @@ namespace RememberWhen.Lambda
             {
                 var environmentService = container.GetService<IEnvironmentManagementService>();
                 return new AmazonSimpleEmailServiceClient(environmentService.AWSRegion);
+            });
+            services.AddTransient<IAmazonSimpleSystemsManagement, AmazonSimpleSystemsManagementClient>(container =>
+            {
+                var environmentService = container.GetService<IEnvironmentManagementService>();
+                return new AmazonSimpleSystemsManagementClient(environmentService.AWSRegion);
             });
 
             var serviceProvider = services.BuildServiceProvider();

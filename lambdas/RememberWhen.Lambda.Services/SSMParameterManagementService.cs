@@ -14,12 +14,12 @@ namespace RememberWhen.Lambda.Services
 
     public class SSMParameterManagementService : IParameterManagementService
     {
-        private readonly IEnvironmentManagementService _environmentManagementService;
+        private readonly IAmazonSimpleSystemsManagement _ssm;
         private readonly IDictionary<string, string> _parameterDictionary;
 
-        public SSMParameterManagementService(IEnvironmentManagementService environmentManagementService)
+        public SSMParameterManagementService(IAmazonSimpleSystemsManagement ssm)
         {
-            _environmentManagementService = environmentManagementService;
+            _ssm = ssm;
             
             _parameterDictionary = new Dictionary<string, string>();
         }
@@ -39,21 +39,18 @@ namespace RememberWhen.Lambda.Services
             {
                 try
                 {
-                    using (var ssm = new AmazonSimpleSystemsManagementClient(_environmentManagementService.AWSRegion))
+                    foreach (var key in keys)
                     {
-                        foreach (var key in keys)
+                        // check again, as we might only be loading a subset of the requested parameters
+                        if (!_parameterDictionary.ContainsKey(key))
                         {
-                            // check again, as we might only be loading a subset of the requested parameters
-                            if (!_parameterDictionary.ContainsKey(key))
+                            var response = await _ssm.GetParameterAsync(new GetParameterRequest
                             {
-                                var response = await ssm.GetParameterAsync(new GetParameterRequest
-                                {
-                                    Name = key,
-                                    WithDecryption = true
-                                });
+                                Name = key,
+                                WithDecryption = true
+                            });
 
-                                _parameterDictionary.Add(key, response.Parameter.Value);
-                            }
+                            _parameterDictionary.Add(key, response.Parameter.Value);
                         }
                     }
                 }
