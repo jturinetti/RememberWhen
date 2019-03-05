@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
+using Amazon.SimpleEmail;
 using Microsoft.Extensions.DependencyInjection;
 using RememberWhen.Lambda.Models;
 using RememberWhen.Lambda.Services;
@@ -21,12 +22,20 @@ namespace RememberWhen.Lambda
         {
             var services = new ServiceCollection();
 
+            // custom service registrations
             services.AddTransient<IMemoryService, StaticMemoryService>();
             services.AddTransient<IEmailService, SESEmailService>();
             services.AddTransient<IParameterManagementService, SSMParameterManagementService>();
             services.AddTransient<ITextMessageService, TwilioTextMessageService>();
             services.AddTransient<IEnvironmentManagementService, AWSEnvironmentManagementService>();
             services.AddTransient<IApplicationService, RememberWhenApplicationService>();
+
+            // Amazon service registrations
+            services.AddTransient<IAmazonSimpleEmailService, AmazonSimpleEmailServiceClient>(container =>
+            {
+                var environmentService = container.GetService<IEnvironmentManagementService>();
+                return new AmazonSimpleEmailServiceClient(environmentService.AWSRegion);
+            });
 
             var serviceProvider = services.BuildServiceProvider();
 
