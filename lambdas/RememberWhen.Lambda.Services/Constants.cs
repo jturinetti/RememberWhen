@@ -1,11 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace RememberWhen.Lambda.Services
 {
     public static class Constants
     {
+        // AWS constants
+        public const string DevEnvironmentName = "dev";
+        public const string ProdEnvironmentName = "prod";
+        public const string AWSEnvironmentEnvironmentVariableName = "STAGE";
+
         // parameter keys
         public const string HusbandPhoneNumberKey = "HusbandPhoneNumber";
         public const string HusbandEmailKey = "HusbandEmail";

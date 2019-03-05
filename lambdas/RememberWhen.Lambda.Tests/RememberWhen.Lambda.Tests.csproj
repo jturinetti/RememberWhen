@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <RootNamespace>iot_rememberwhen_tests</RootNamespace>
+    <RootNamespace>RememberWhen.Lambda.Tests</RootNamespace>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>

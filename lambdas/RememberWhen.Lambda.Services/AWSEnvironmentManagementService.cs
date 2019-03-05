@@ -20,18 +20,14 @@ namespace RememberWhen.Lambda.Services
 
     public class AWSEnvironmentManagementService : IEnvironmentManagementService
     {
-        const string DevEnvironmentName = "dev";
-        const string ProdEnvironmentName = "prod";
-        const string AWSEnvironmentEnvironmentVariableName = "STAGE";
-
         public AWSEnvironmentManagementService()
         {
             var environment = RetrieveEnvironmentName();
-            if (string.Compare(environment, DevEnvironmentName, true) == 0)
+            if (string.Compare(environment, Constants.DevEnvironmentName, true) == 0)
             {
                 EnvironmentType = Environments.Dev;
             }
-            else if (string.Compare(environment, ProdEnvironmentName, true) == 0)
+            else if (string.Compare(environment, Constants.ProdEnvironmentName, true) == 0)
             {
                 EnvironmentType = Environments.Production;
             }
@@ -43,7 +39,7 @@ namespace RememberWhen.Lambda.Services
 
         public string RetrieveEnvironmentName()
         {
-            return Environment.GetEnvironmentVariable(AWSEnvironmentEnvironmentVariableName);
+            return Environment.GetEnvironmentVariable(Constants.AWSEnvironmentEnvironmentVariableName);
         }
 
         public Environments EnvironmentType { get; }
