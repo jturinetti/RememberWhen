@@ -24,7 +24,7 @@ namespace RememberWhen.Lambda.Services
             // check to see if targeted emails are verified
             var verificationAttributesResponse = await _ses.GetIdentityVerificationAttributesAsync(new GetIdentityVerificationAttributesRequest
             {
-                Identities = targetEmailAddresses
+                Identities = new List<string>(targetEmailAddresses)
             });
 
             // ensure emails are verified, then send to all verified email addresses
