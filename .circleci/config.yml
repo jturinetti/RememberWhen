@@ -1,0 +1,14 @@
+# .NET Core CircleCI config file
+
+version: 2
+jobs:
+  build:
+    docker:
+      - image: mcr.microsoft.com/dotnet/core/runtime:2.1
+
+    steps:
+      - checkout
+
+      - run: dotnet restore
+      - run: dotnet build
+      - run: dotnet test
