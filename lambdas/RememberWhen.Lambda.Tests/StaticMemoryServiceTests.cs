@@ -17,6 +17,8 @@ namespace RememberWhen.Lambda.Tests
         {
             var result = _sut.RetrieveRandomMemory();
 
+            throw new System.Exception("testing");
+
             Assert.False(string.IsNullOrEmpty(result));
         }
     }
