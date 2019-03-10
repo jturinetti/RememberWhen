@@ -9,17 +9,15 @@ using RememberWhen.Lambda.Services;
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 namespace RememberWhen.Lambda
 {
-    public class Handler
+    public interface IRememberWhenLambdaHandler
     {
-        private readonly IApplicationService _application;
+        ServiceCollection InitializeServiceDependencies();
+        Task<RememberWhenResponseModel> Reminisce();
+    }
 
-        public Handler()
-        {
-            var serviceProvider = InitializeApplication();
-            _application = serviceProvider.GetService<IApplicationService>();
-        }
-
-        private ServiceProvider InitializeApplication()
+    public class Handler : IRememberWhenLambdaHandler
+    {
+        public ServiceCollection InitializeServiceDependencies()
         {
             var services = new ServiceCollection();
 
@@ -43,9 +41,7 @@ namespace RememberWhen.Lambda
                 return new AmazonSimpleSystemsManagementClient(environmentService.AWSRegion);
             });
 
-            var serviceProvider = services.BuildServiceProvider();
-
-            return serviceProvider;
+            return services;
         }
 
         /// <summary>
@@ -54,7 +50,15 @@ namespace RememberWhen.Lambda
         /// <returns></returns>
         public async Task<RememberWhenResponseModel> Reminisce()
         {
-            var result = await _application.Run();
+            // get dependency registrations
+            var serviceRegistrations = InitializeServiceDependencies();
+
+            // build container
+            var container = serviceRegistrations.BuildServiceProvider();
+            
+            // run application
+            var application = container.GetService<IApplicationService>();
+            var result = await application.Run();
             return result;
         }
     }
